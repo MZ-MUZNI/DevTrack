@@ -1,0 +1,28 @@
+@model DevTrack.Core.Entities.ProjectEntity
+
+@{
+    ViewData["Title"] = "New Project";
+}
+
+<h1>New Project</h1>
+
+<form asp-action="Create" method="post">
+    @* AntiForgeryToken is required because the Controller has [ValidateAntiForgeryToken] *@
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
