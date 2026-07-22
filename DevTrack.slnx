@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/DevTrack.Api/DevTrack.Api.csproj" />
+    <Project Path="src/DevTrack.Application/DevTrack.Application.csproj" />
     <Project Path="src/DevTrack.Core/DevTrack.Core.csproj" />
     <Project Path="src/DevTrack.Infrastructure/DevTrack.Infrastructure.csproj" />
     <Project Path="src/DevTrack.Web/DevTrack.Web.csproj" />
