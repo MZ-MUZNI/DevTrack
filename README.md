@@ -17,8 +17,8 @@ DevTrack is a modern project management tool designed to help development teams 
 
 ## 🛠️ Tech Stack
 
-- **Backend**: C# (73.4%)
-- **Frontend**: HTML (25.9%)
+- **Backend**: C#
+- **Frontend**: HTML
 - **Build & Infrastructure**: Various supporting technologies
 
 ## 📋 Prerequisites
