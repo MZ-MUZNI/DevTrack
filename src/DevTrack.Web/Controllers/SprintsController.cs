@@ -1,5 +1,6 @@
 using DevTrack.Core.Entities;
 using DevTrack.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -83,6 +84,7 @@ public class SprintsController : Controller
     }
 
     // GET: /Sprints/Delete/5
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(int id)
     {
         var sprint = await _sprintRepository.GetByIdAsync(id);
@@ -93,6 +95,7 @@ public class SprintsController : Controller
     // POST: /Sprints/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var sprint = await _sprintRepository.GetByIdAsync(id);

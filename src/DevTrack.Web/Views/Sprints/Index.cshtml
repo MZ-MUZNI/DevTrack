@@ -10,32 +10,34 @@
     <a asp-action="Create" class="btn btn-primary">+ New Sprint</a>
 </p>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Project</th>
-            <th>Start</th>
-            <th>End</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var sprint in Model)
-    {
-        <tr>
-            <td>@sprint.Name</td>
-            @* sprint.Project could be null here because GetAllAsync() does a plain
-               query with no .Include() - EF Core does NOT auto-load related data.
-               We'll fix this properly with eager loading in the Services lesson. *@
-            <td>@(sprint.Project?.Name ?? $"(Project #{sprint.ProjectId})")</td>
-            <td>@sprint.StartDate.ToShortDateString()</td>
-            <td>@sprint.EndDate.ToShortDateString()</td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@sprint.Id">Edit</a> |
-                <a asp-action="Delete" asp-route-id="@sprint.Id">Delete</a>
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
+<div class="table-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Project</th>
+                <th>Start</th>
+                <th>End</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var sprint in Model)
+        {
+            <tr>
+                <td>@sprint.Name</td>
+                @* sprint.Project could be null here because GetAllAsync() does a plain
+                   query with no .Include() - EF Core does NOT auto-load related data.
+                   We'll fix this properly with eager loading in the Services lesson. *@
+                <td>@(sprint.Project?.Name ?? $"(Project #{sprint.ProjectId})")</td>
+                <td>@sprint.StartDate.ToShortDateString()</td>
+                <td>@sprint.EndDate.ToShortDateString()</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@sprint.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@sprint.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

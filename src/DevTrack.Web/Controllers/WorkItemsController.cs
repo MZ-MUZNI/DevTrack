@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Threading.Tasks;
 using DevTrack.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DevTrack.Web.Controllers
 {
@@ -106,6 +107,7 @@ namespace DevTrack.Web.Controllers
         }
 
         // GET: WorkItems/Delete/5
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Delete(int id)
         {
             var workItem = await _workItemService.GetByIdAsync(id);
@@ -116,6 +118,7 @@ namespace DevTrack.Web.Controllers
         // POST: WorkItems/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await _workItemService.DeleteAsync(id);

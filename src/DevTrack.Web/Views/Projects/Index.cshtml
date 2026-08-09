@@ -10,28 +10,30 @@
     <a asp-action="Create" class="btn btn-primary">+ New Project</a>
 </p>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Created</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var project in Model)
-    {
-        <tr>
-            <td>@project.Name</td>
-            <td>@project.Description</td>
-            <td>@project.CreatedAt.ToShortDateString()</td>
-            <td>
-                <a asp-action="Details" asp-route-id="@project.Id">Details</a> |
-                <a asp-action="Edit" asp-route-id="@project.Id">Edit</a> |
-                <a asp-action="Delete" asp-route-id="@project.Id">Delete</a>
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
+<div class="table-card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Created</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var project in Model)
+        {
+            <tr>
+                <td>@project.Name</td>
+                <td>@project.Description</td>
+                <td>@project.CreatedAt.ToShortDateString()</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@project.Id" class="btn btn-sm btn-outline-secondary">Details</a>
+                    <a asp-action="Edit" asp-route-id="@project.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@project.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

@@ -1,5 +1,6 @@
 using DevTrack.Core.Entities;
 using DevTrack.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DevTrack.Web.Controllers;
@@ -77,6 +78,7 @@ public class ProjectsController : Controller
     }
 
     // GET: /Projects/Delete/5
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(int id)
     {
         var project = await _projectRepository.GetByIdAsync(id);
@@ -87,6 +89,7 @@ public class ProjectsController : Controller
     // POST: /Projects/Delete/5
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var project = await _projectRepository.GetByIdAsync(id);

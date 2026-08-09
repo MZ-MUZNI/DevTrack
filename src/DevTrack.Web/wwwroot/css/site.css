@@ -1,31 +1,312 @@
-html {
-  font-size: 14px;
+/* ============================================
+   DevTrack theme
+   Deep slate base + cyan accent, dev-tool identity
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    --bg: #0F172A;
+    --surface: #1E293B;
+    --surface-hover: #263449;
+    --border: #33415580;
+    --accent: #22D3EE;
+    --accent-hover: #67E3F5;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --text: #F1F5F9;
+    --text-muted: #94A3B8;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+html, body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+a {
+    color: var(--accent);
+    text-decoration: none;
 }
 
-body {
-  margin-bottom: 60px;
+    a:hover {
+        color: var(--accent-hover);
+        text-decoration: underline;
+    }
+
+/* ---------- Navbar ---------- */
+.navbar {
+    background-color: var(--surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+    box-shadow: none !important;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.navbar-brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--text) !important;
+    letter-spacing: -0.02em;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.navbar .nav-link {
+    color: var(--text-muted) !important;
+    font-weight: 500;
 }
+
+    .navbar .nav-link:hover,
+    .navbar .nav-link.active {
+        color: var(--text) !important;
+    }
+
+.navbar-toggler {
+    border-color: var(--border) !important;
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #0F172A;
+    font-weight: 600;
+}
+
+    .btn-primary:hover {
+        background-color: var(--accent-hover);
+        border-color: var(--accent-hover);
+        color: #0F172A;
+    }
+
+.btn-danger {
+    background-color: var(--danger);
+    border-color: var(--danger);
+}
+
+.btn-outline-secondary {
+    border-color: var(--border);
+    color: var(--text-muted);
+}
+
+    .btn-outline-secondary:hover {
+        background-color: var(--surface-hover);
+        color: var(--text);
+    }
+
+.btn-outline-primary {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+    .btn-outline-primary:hover {
+        background-color: var(--accent);
+        color: var(--bg);
+    }
+
+.btn-outline-danger {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+    .btn-outline-danger:hover {
+        background-color: var(--danger);
+        color: var(--bg);
+    }
+
+/* ---------- Tables ---------- */
+.table {
+    color: var(--text);
+    border-color: var(--border);
+}
+
+    .table thead th {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
+        font-weight: 500;
+    }
+
+/*.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: var(--surface);
+    color: var(--text);
+}*/
+
+.table td, .table th {
+    border-color: var(--border);
+}
+
+/* ---------- Table card wrapper ---------- */
+.table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+    .table-card .table {
+        margin-bottom: 0;
+    }
+
+        .table-card .table thead th {
+            padding: 0.9rem 1.25rem;
+            background: rgba(0,0,0,0.15);
+        }
+
+        .table-card .table td {
+            padding: 0.9rem 1.25rem;
+            vertical-align: middle;
+        }
+
+        .table-card .table tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+            .table-card .table tbody tr:hover {
+                background-color: var(--surface-hover) !important;
+            }
+
+/* ---------- Forms ---------- */
+.form-control, .form-select {
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+    .form-control:focus, .form-select:focus {
+        background-color: var(--surface);
+        border-color: var(--accent);
+        color: var(--text);
+        box-shadow: 0 0 0 0.2rem rgba(34, 211, 238, 0.25);
+    }
+
+.form-label {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* ---------- Status pills (WorkItemStatus) ----------
+   Maps directly to DevTrack.Core.Entities.WorkItemStatus:
+   Backlog -> InProgress -> InReview -> Done
+*/
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+    .status-pill::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+.status-backlog {
+    background: #47556980;
+    color: #CBD5E1;
+}
+
+    .status-backlog::before {
+        background: #CBD5E1;
+    }
+
+.status-inprogress {
+    background: rgba(34, 211, 238, 0.15);
+    color: var(--accent);
+}
+
+    .status-inprogress::before {
+        background: var(--accent);
+    }
+
+.status-inreview {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--warning);
+}
+
+    .status-inreview::before {
+        background: var(--warning);
+    }
+
+.status-done {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+}
+
+    .status-done::before {
+        background: var(--success);
+    }
+
+/* ---------- Hero (home page) ---------- */
+.hero {
+    padding: 5rem 0 4rem;
+}
+
+.hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.75rem;
+}
+
+.hero h1 {
+    font-size: 2.75rem;
+    margin-bottom: 1rem;
+}
+
+.hero p.lead {
+    color: var(--text-muted);
+    font-size: 1.15rem;
+    max-width: 42rem;
+}
+
+/* Signature element: the status flow legend */
+.status-flow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+}
+
+    .status-flow .status-pill {
+        padding: 0.4rem 0.85rem;
+        font-size: 0.85rem;
+    }
+
+    .status-flow .flow-arrow {
+        color: var(--border);
+        font-family: var(--font-mono);
+    }
+
+/* ---------- Footer ---------- */
+.footer {
+    background-color: var(--surface);
+    border-top: 1px solid var(--border) !important;
+    color: var(--text-muted) !important;
+}
+
+    .footer a {
+        color: var(--text-muted);
+    }

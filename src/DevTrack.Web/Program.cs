@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using DevTrack.Web.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +23,25 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddEntityFrameworkStores<DevTrackIdentityDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddRazorPages(); // Identity UI is Razor Pages, not MVC — check this is registered
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+});
+
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/Login");
+    options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/Register");
+    options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/Logout");
+    options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/ForgotPassword");
+    options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/ForgotPasswordConfirmation");
+    options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/ResetPassword");
+    options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/ResetPasswordConfirmation");
+    options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/AccessDenied");
+    options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/ConfirmEmail");
+    options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/Lockout");
+});
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
@@ -34,7 +54,18 @@ builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IEmailSender, DevTrackEmailSender>();
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    var policy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+    options.Filters.Add(new AuthorizeFilter(policy));
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+});
 
 var app = builder.Build();
 
@@ -44,6 +75,20 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    string[] roleNames = { "Admin", "TeamMember" };
+    foreach (var roleName in roleNames)
+    {
+        if (!await roleManager.RoleExistsAsync(roleName))
+        {
+            await roleManager.CreateAsync(new IdentityRole(roleName));
+        }
+    }
 }
 
 app.UseHttpsRedirection();
