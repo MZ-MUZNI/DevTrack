@@ -4,7 +4,7 @@ A layered ASP.NET Core MVC sprint & task tracker, built as a hands-on learning p
 
 ## 🎯 Overview
 
-DevTrack is a Jira-style sprint and task tracker for small teams — Projects, Sprints, and Work Items, with role-based access control (Admin / Team Member). It's built with a clean, layered architecture rather than a single monolithic project, so business logic stays testable and independent of the database and UI.
+DevTrack is a Jira-style sprint and task tracker for small teams - Projects, Sprints, and Work Items, with role-based access control (Admin / Team Member). It's built with a clean, layered architecture rather than a single monolithic project, so business logic stays testable and independent of the database and UI.
 
 ## 🛠️ Tech Stack
 
@@ -32,8 +32,8 @@ DevTrack.sln
 **Dependency rule:** `Core` depends on nothing. `Application` and `Infrastructure` depend on `Core`. `Web`/`Api` depend on `Application` (for services) and `Infrastructure` (for DI registration only). This keeps domain logic swappable and unit-testable without needing a real database.
 
 **Two databases, deliberately separated:**
-- `DevTrackDb` — Projects, Sprints, Work Items (via `DevTrackDbContext`)
-- `DevTrackIdentityDb` — Users, Roles, and all ASP.NET Core Identity tables (via `DevTrackIdentityDbContext`)
+- `DevTrackDb` - Projects, Sprints, Work Items (via `DevTrackDbContext`)
+- `DevTrackIdentityDb` - Users, Roles, and all ASP.NET Core Identity tables (via `DevTrackIdentityDbContext`)
 
 Authentication is kept in its own bounded context, separate from domain data, rather than merged into one database.
 
@@ -41,9 +41,9 @@ Authentication is kept in its own bounded context, separate from domain data, ra
 
 Before cloning, make sure the following are installed:
 
-- **.NET SDK** (net10.0) — verify with `dotnet --version`
-- **SQL Server Express LocalDB** — usually bundled with Visual Studio's ASP.NET/web workload. Verify with `sqllocaldb info`. If that command isn't recognized, reinstall/repair Visual Studio with the ASP.NET and web development workload checked.
-- **EF Core CLI tool** (`dotnet-ef`) — **not** included with the SDK by default; see setup step 3 below.
+- **.NET SDK** (net10.0) - verify with `dotnet --version`
+- **SQL Server Express LocalDB** - usually bundled with Visual Studio's ASP.NET/web workload. Verify with `sqllocaldb info`. If that command isn't recognized, reinstall/repair Visual Studio with the ASP.NET and web development workload checked.
+- **EF Core CLI tool** (`dotnet-ef`) - **not** included with the SDK by default; see setup step 3 below.
 - **Visual Studio 2022+** (recommended) or any editor with C# support
 - **Git**
 
@@ -62,7 +62,7 @@ cd DevTrack
 dotnet restore
 ```
 
-This reads every project's `.csproj` and downloads all required packages automatically — nothing needs to be installed manually. Key packages worth knowing about, since they explain a lot of the app's behavior:
+This reads every project's `.csproj` and downloads all required packages automatically - nothing needs to be installed manually. Key packages worth knowing about, since they explain a lot of the app's behavior:
 
 | Package | Project | Purpose |
 |---|---|---|
@@ -152,13 +152,13 @@ If it's `0`, the scaffolded ForgotPassword flow silently skips sending anything 
 ```bash
 sqlcmd -S "(localdb)\MSSQLLocalDB" -d DevTrackIdentityDb -Q "SET QUOTED_IDENTIFIER ON; UPDATE AspNetUsers SET EmailConfirmed = 1 WHERE Email = 'the-email'"
 ```
-There's no real email provider configured — `DevTrackEmailSender` (`src/DevTrack.Web/Services/DevTrackEmailSender.cs`) logs emails to the console instead of sending them. Watch the terminal running `dotnet run` for the reset link after triggering "Forgot your password?".
+There's no real email provider configured - `DevTrackEmailSender` (`src/DevTrack.Web/Services/DevTrackEmailSender.cs`) logs emails to the console instead of sending them. Watch the terminal running `dotnet run` for the reset link after triggering "Forgot your password?".
 
 ### Unable to resolve service for type `IWorkItemRepository` / similar DI error
-A new interface/implementation pair was added but never registered in `Program.cs`. DI is explicit — every repository/service needs its own `builder.Services.AddScoped<TInterface, TImplementation>()` line.
+A new interface/implementation pair was added but never registered in `Program.cs`. DI is explicit - every repository/service needs its own `builder.Services.AddScoped<TInterface, TImplementation>()` line.
 
 ### Fresh machine / reinstalled OS and LocalDB data is gone
-LocalDB's actual data files aren't part of this git repo (by design — only schema-defining migration code is checked in). After cloning on a new machine, just re-run setup steps 3–6 above to rebuild both databases from the migrations. You will need to re-register any user accounts and re-enter sample data, since that lived only in the local database files.
+LocalDB's actual data files aren't part of this git repo (by design - only schema-defining migration code is checked in). After cloning on a new machine, just re-run setup steps 3–6 above to rebuild both databases from the migrations. You will need to re-register any user accounts and re-enter sample data, since that lived only in the local database files.
 
 ## 🗺️ Project Status
 
