@@ -132,6 +132,39 @@ sqlcmd -S "(localdb)\MSSQLLocalDB" -d DevTrackIdentityDb -Q "SET QUOTED_IDENTIFI
 
 Authorization is enforced with a global policy (login required by default across all MVC controllers) plus a named `"AdminOnly"` policy applied to Delete actions, both configured in `Program.cs`.
 
+## 🔄 CI/CD
+
+GitHub Actions validates every pull request and push to `main`: it restores packages, builds the complete solution in Release mode, runs xUnit tests with coverage collection, and stores the test output as a workflow artifact. Pull requests never deploy.
+
+After validation succeeds, pushes to `main` (and manual workflow runs) publish and deploy `DevTrack.Web` to the existing Azure App Service, `devtrack-web`. To enable deployment in your own repository:
+
+1. In Azure Portal, open the App Service and select **Get publish profile**.
+2. In GitHub, open **Settings → Secrets and variables → Actions** and create a repository secret named `AZURE_WEBAPP_PUBLISH_PROFILE` containing the downloaded profile's complete XML. Never commit this file.
+3. Push the workflow file to `main`, then open the **Actions** tab to review the Build and test and Deploy web app jobs.
+
+The deploy job is intentionally separate from validation, so a failed test can never publish a release. Add API deployment only after provisioning a distinct App Service for `DevTrack.Api` and storing its publish profile as a separate secret.
+
+## 🤖 Local AI Task Planning
+
+The API can generate a reviewable subtask plan locally, with no cloud API key or per-request charge. Install [Ollama](https://ollama.com), then download the configured model once:
+
+```powershell
+ollama pull gemma4
+dotnet run --project src/DevTrack.Api
+```
+
+After logging in through `POST /api/auth/login`, send its bearer token to `POST /api/ai/task-suggestions`:
+
+```json
+{
+  "title": "Add password reset",
+  "description": "Let users securely reset a forgotten password.",
+  "sprintId": 1
+}
+```
+
+The response contains 3–7 suggested subtasks, assumptions, and whole-hour estimates. It never writes suggestions to the database; review and create accepted items through `POST /api/work-items`. The local API assumes Ollama is running at `http://localhost:11434`; change `Ollama:BaseUrl` or `Ollama:Model` in `src/DevTrack.Api/appsettings.json` if required. This setup works only when the API and Ollama run on the same machine. A deployed API needs a separately hosted model provider.
+
 ## 🩺 Troubleshooting
 
 ### `Could not execute because the specified command or file was not found` (running `dotnet ef ...`)
@@ -162,7 +195,7 @@ LocalDB's actual data files aren't part of this git repo (by design - only schem
 
 ## 🗺️ Project Status
 
-Actively developed as a learning project. Current feature set: full CRUD across Projects/Sprints/Work Items, layered architecture with a Service layer, ASP.NET Core Identity with role-based authorization. Planned next: Web API + DTOs, automated tests, CI/CD, and Azure deployment.
+Actively developed as a learning project. Current feature set: full CRUD across Projects/Sprints/Work Items, a layered architecture with a Service layer, ASP.NET Core Identity with role-based authorization, JWT-protected Web API endpoints, automated tests, local AI-assisted task planning, and a GitHub Actions build/test/deploy pipeline. Planned next: monitoring and production email delivery.
 
 ## 👤 Author
 

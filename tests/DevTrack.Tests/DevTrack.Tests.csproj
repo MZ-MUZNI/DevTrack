@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\DevTrack.Application\DevTrack.Application.csproj" />
     <ProjectReference Include="..\..\src\DevTrack.Core\DevTrack.Core.csproj" />
     <ProjectReference Include="..\..\src\DevTrack.Infrastructure\DevTrack.Infrastructure.csproj" />
   </ItemGroup>

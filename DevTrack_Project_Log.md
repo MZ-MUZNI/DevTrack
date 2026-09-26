@@ -12,12 +12,12 @@ Layered ASP.NET Core MVC solution:
 DevTrack.sln
  ├─ src/
  │   ├─ DevTrack.Web            → MVC project (Controllers, Views, Identity UI, wwwroot)
- │   ├─ DevTrack.Api            → Web API project (scaffolded, not yet built out)
+ │   ├─ DevTrack.Api            → JWT-protected Web API and local AI task-planning endpoint
  │   ├─ DevTrack.Core           → Domain entities + interfaces (zero dependencies)
  │   ├─ DevTrack.Application    → Services / business logic (depends only on Core)
  │   └─ DevTrack.Infrastructure → EF Core, DbContexts, repository implementations
  └─ tests/
-     └─ DevTrack.Tests          → xUnit (scaffolded, not yet written)
+     └─ DevTrack.Tests          → xUnit service and local AI-provider tests
 ```
 
 **Dependency rule:** Core depends on nothing. Application and Infrastructure depend on Core. Web/Api depend on Application (services) and Infrastructure (DI registration only).
@@ -75,20 +75,26 @@ Chosen over a single merged database specifically so authentication is its own b
 - **Cost alerts** set up on both the SQL resource group and (recommended) the App Service, budget threshold ~$10, alerting at 80%
 - **Published successfully** from Visual Studio via Zip Deploy, after resolving several deployment-specific issues (full list below)
 - Live site confirmed working: home page, registration, login, and CRUD all functioning against the Azure-hosted databases
+- **GitHub Actions pipeline:** `.github/workflows/ci-cd.yml` restores, builds, and tests every pull request and push to `main`; successful non-PR runs publish and deploy `DevTrack.Web` to `devtrack-web` after the `AZURE_WEBAPP_PUBLISH_PROFILE` repository secret is configured
+
+### 2.7 Local AI Task Planning
+- `POST /api/ai/task-suggestions` accepts an authenticated user's task title, description, and Sprint ID and returns 3–7 structured subtask suggestions with assumptions and whole-hour estimates
+- Local-first `OllamaTaskPlanningService` calls Ollama at `http://localhost:11434`; no cloud API key or per-request charge is required
+- Suggestions are never persisted automatically: users review them, then create accepted work items through the existing API flow
+- Output is constrained by a JSON schema and validated before being returned to the client; the provider is covered by a simulated HTTP-response xUnit test
 
 ---
 
 ## 3. What's Pending
 
-1. **Web API + DTOs** — `DevTrack.Api` project exists but isn't built out; needs DTOs to decouple the API contract from EF Core entities
-2. **xUnit tests** — `DevTrack.Tests` scaffolded, no tests written yet; plan is to mock `IWorkItemRepository`/`ISprintRepository` to unit test `WorkItemService` in isolation
-3. **AI-assist feature** — endpoint that sends a task description to an LLM API and returns suggested subtasks/estimates (not started)
-4. **CI/CD** — GitHub Actions pipeline (build → test → deploy); deliberately deferred in favor of understanding manual deployment first. A GitHub-integrated auto-deploy wizard was explored but abandoned due to a regional Application Insights conflict tied to the resource group
-5. **`Microsoft.OpenApi` NU1903 vulnerability warning** — flagged early on, not yet addressed; check `dotnet list package --vulnerable` and update to a patched version
-6. **Azure roles/data seeding** — roles seed automatically on first app run against Azure (same startup code), but no sample Projects/Sprints/WorkItems have been manually re-entered into the live Azure database yet
-7. **Application Insights / monitoring** — intentionally skipped during App Service creation to avoid a regional conflict; could be added later as its own deliberate step, in a compatible region
-8. **Base repository refactor consideration** — currently `[Authorize(Policy = "AdminOnly")]` is repeated across three controllers' Delete actions; acceptable at current scale, but worth knowing a base controller class or more centralized policy structure is the next step if this grows
-9. **Real email provider** — `DevTrackEmailSender` still just logs to console; no SendGrid/SMTP wired up for actual email delivery in production
+1. **AI-assist UI and endpoint tests** — add an MVC review/accept screen and controller-level API tests for JWT authorization, validation, and unavailable-model responses
+2. **Enable CD secret** — the workflow is committed, but deployment activates only after `AZURE_WEBAPP_PUBLISH_PROFILE` is added to GitHub repository secrets
+3. **API hosting** — provision a separate App Service for `DevTrack.Api`, then add a distinct deployment job and publish-profile secret
+4. **`Microsoft.OpenApi` NU1903 vulnerability warning** — flagged early on, not yet addressed; check `dotnet list package --vulnerable` and update to a patched version
+5. **Azure roles/data seeding** — roles seed automatically on first app run against Azure (same startup code), but no sample Projects/Sprints/WorkItems have been manually re-entered into the live Azure database yet
+6. **Application Insights / monitoring** — intentionally skipped during App Service creation to avoid a regional conflict; could be added later as its own deliberate step, in a compatible region
+7. **Base repository refactor consideration** — currently `[Authorize(Policy = "AdminOnly")]` is repeated across three controllers' Delete actions; acceptable at current scale, but worth knowing a base controller class or more centralized policy structure is the next step if this grows
+8. **Real email provider** — `DevTrackEmailSender` still just logs to console; no SendGrid/SMTP wired up for actual email delivery in production
 
 ---
 

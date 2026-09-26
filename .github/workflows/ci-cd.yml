@@ -1,0 +1,73 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore DevTrack.slnx
+
+      - name: Build solution
+        run: dotnet build DevTrack.slnx --configuration Release --no-restore
+
+      - name: Run tests with coverage
+        run: dotnet test DevTrack.slnx --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      - name: Upload test results and coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+          if-no-files-found: warn
+
+      - name: Publish web app
+        run: dotnet publish src/DevTrack.Web/DevTrack.Web.csproj --configuration Release --no-build --output ./publish-web
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: devtrack-web
+          path: ./publish-web
+
+  deploy-web:
+    name: Deploy web app
+    needs: build-test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+
+    steps:
+      - name: Download deployment package
+        uses: actions/download-artifact@v4
+        with:
+          name: devtrack-web
+          path: ./publish-web
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: devtrack-web
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish-web
