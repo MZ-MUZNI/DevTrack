@@ -310,3 +310,73 @@ a {
     .footer a {
         color: var(--text-muted);
     }
+
+/* ---------- AI planner ---------- */
+.planner-header {
+    padding: 2.5rem 0 1.5rem;
+}
+
+    .planner-header .lead {
+        color: var(--text-muted);
+        max-width: 42rem;
+    }
+
+.planner-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.planner-result-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+    .planner-result-header h2 {
+        margin-bottom: 0;
+    }
+
+.planner-summary {
+    color: var(--text);
+    font-size: 1.05rem;
+}
+
+.planner-assumptions {
+    color: var(--text-muted);
+    border-left: 3px solid var(--warning);
+    background: rgba(251, 191, 36, 0.08);
+    padding: 0.75rem 1rem;
+    margin: 1.25rem 0;
+}
+
+    .planner-assumptions ul {
+        margin: 0.5rem 0 0;
+        padding-left: 1.25rem;
+    }
+
+.suggestion-card {
+    display: flex;
+    gap: 0.75rem;
+    background: rgba(15, 23, 42, 0.35);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 0.75rem;
+}
+
+.suggestion-check {
+    flex: 0 0 auto;
+    margin-top: 0.3rem;
+}
+
+.suggestion-content {
+    flex: 1;
+}
+
+.hours-input {
+    max-width: 8rem;
+}

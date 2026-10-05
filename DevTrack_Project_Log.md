@@ -82,12 +82,13 @@ Chosen over a single merged database specifically so authentication is its own b
 - Local-first `OllamaTaskPlanningService` calls Ollama at `http://localhost:11434`; no cloud API key or per-request charge is required
 - Suggestions are never persisted automatically: users review them, then create accepted work items through the existing API flow
 - Output is constrained by a JSON schema and validated before being returned to the client; the provider is covered by a simulated HTTP-response xUnit test
+- `DevTrack.Web` exposes the same capability through its authenticated **AI Planner** page; users can edit, select, and create approved suggestions as backlog work items without handling JWTs or API requests
 
 ---
 
 ## 3. What's Pending
 
-1. **AI-assist UI and endpoint tests** — add an MVC review/accept screen and controller-level API tests for JWT authorization, validation, and unavailable-model responses
+1. **AI-assist endpoint tests** — add controller-level tests for JWT authorization, validation, and unavailable-model responses
 2. **Enable CD secret** — the workflow is committed, but deployment activates only after `AZURE_WEBAPP_PUBLISH_PROFILE` is added to GitHub repository secrets
 3. **API hosting** — provision a separate App Service for `DevTrack.Api`, then add a distinct deployment job and publish-profile secret
 4. **`Microsoft.OpenApi` NU1903 vulnerability warning** — flagged early on, not yet addressed; check `dotnet list package --vulnerable` and update to a patched version

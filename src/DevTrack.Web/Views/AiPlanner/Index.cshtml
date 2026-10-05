@@ -1,0 +1,99 @@
+@model DevTrack.Web.Models.AiPlannerViewModel
+
+@{
+    ViewData["Title"] = "AI Planner";
+}
+
+<div class="planner-header">
+    <p class="hero-eyebrow">Local AI assistance</p>
+    <h1>Plan work with AI</h1>
+    <p class="lead">Describe a goal, review the suggested breakdown, then save only the items you approve.</p>
+</div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="alert">@success</div>
+}
+
+<div class="planner-card mb-4">
+    <form asp-action="Generate" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" placeholder="Example: Add a password-reset flow" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="5" placeholder="Add the outcome, constraints, and any important details."></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        <div class="mb-4">
+            <label asp-for="SprintId" class="form-label"></label>
+            <select asp-for="SprintId" asp-items="Model.Sprints" class="form-select">
+                <option value="">Choose a sprint</option>
+            </select>
+            <span asp-validation-for="SprintId" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Generate plan</button>
+    </form>
+</div>
+
+@if (Model.Suggestions.Count > 0)
+{
+    <form asp-action="CreateSelected" method="post" class="planner-card">
+        <input asp-for="Title" type="hidden" />
+        <input asp-for="Description" type="hidden" />
+        <input asp-for="SprintId" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="planner-result-header">
+            <div>
+                <p class="hero-eyebrow">Review before saving</p>
+                <h2>Suggested plan</h2>
+            </div>
+            <span class="status-pill status-inprogress">@Model.Suggestions.Count suggestions</span>
+        </div>
+
+        <p class="planner-summary">@Model.Summary</p>
+
+        @if (Model.Assumptions.Count > 0)
+        {
+            <div class="planner-assumptions">
+                <strong>Assumptions</strong>
+                <ul>
+                    @foreach (var assumption in Model.Assumptions)
+                    {
+                        <li>@assumption</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @for (var index = 0; index < Model.Suggestions.Count; index++)
+        {
+            <div class="suggestion-card">
+                <input asp-for="Suggestions[index].Selected" class="form-check-input suggestion-check" />
+                <div class="suggestion-content">
+                    <label asp-for="Suggestions[index].Selected" class="form-check-label">Create this work item</label>
+                    <input asp-for="Suggestions[index].Title" class="form-control mt-2" />
+                    <span asp-validation-for="Suggestions[index].Title" class="text-danger"></span>
+                    <textarea asp-for="Suggestions[index].Description" class="form-control mt-2" rows="2"></textarea>
+                    <span asp-validation-for="Suggestions[index].Description" class="text-danger"></span>
+                    <div class="hours-input mt-2">
+                        <label asp-for="Suggestions[index].EstimatedHours" class="form-label mb-0"></label>
+                        <input asp-for="Suggestions[index].EstimatedHours" class="form-control" />
+                        <span asp-validation-for="Suggestions[index].EstimatedHours" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary mt-3">Create selected work items</button>
+        <a asp-controller="WorkItems" asp-action="Index" class="btn btn-outline-secondary mt-3">View work items</a>
+    </form>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

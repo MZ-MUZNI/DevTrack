@@ -3,6 +3,7 @@ using DevTrack.Application.Services;
 using DevTrack.Core.Interfaces;
 using DevTrack.Infrastructure.Data;
 using DevTrack.Infrastructure.Identity;
+using DevTrack.Infrastructure.AI;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -50,6 +51,14 @@ builder.Services.AddScoped<ISprintRepository, SprintRepository>();
 builder.Services.AddScoped<IWorkItemRepository, WorkItemRepository>();
 
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
+
+builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection(OllamaOptions.SectionName));
+builder.Services.AddHttpClient<ITaskPlanningService, OllamaTaskPlanningService>((serviceProvider, client) =>
+{
+    var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<OllamaOptions>>().Value;
+    client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(45);
+});
 
 builder.Services.AddScoped<IEmailSender, DevTrackEmailSender>();
 

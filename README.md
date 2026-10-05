@@ -153,7 +153,9 @@ ollama pull gemma4
 dotnet run --project src/DevTrack.Api
 ```
 
-After logging in through `POST /api/auth/login`, send its bearer token to `POST /api/ai/task-suggestions`:
+After starting `DevTrack.Web` and signing in, select **AI Planner** from the navigation bar. Choose a sprint, describe the work, generate a plan, then edit/select the suggestions you want to save. Selected suggestions are created as backlog work items only after your confirmation.
+
+The API endpoint remains available for other clients. After logging in through `POST /api/auth/login`, send its bearer token to `POST /api/ai/task-suggestions`:
 
 ```json
 {
@@ -163,7 +165,7 @@ After logging in through `POST /api/auth/login`, send its bearer token to `POST 
 }
 ```
 
-The response contains 3–7 suggested subtasks, assumptions, and whole-hour estimates. It never writes suggestions to the database; review and create accepted items through `POST /api/work-items`. The local API assumes Ollama is running at `http://localhost:11434`; change `Ollama:BaseUrl` or `Ollama:Model` in `src/DevTrack.Api/appsettings.json` if required. This setup works only when the API and Ollama run on the same machine. A deployed API needs a separately hosted model provider.
+The response contains 3–7 suggested subtasks, assumptions, and whole-hour estimates. It never writes suggestions to the database automatically. Ollama is assumed to run at `http://localhost:11434`; change `Ollama:BaseUrl` or `Ollama:Model` in either host's `appsettings.json` if required. This setup works only when the relevant DevTrack host and Ollama run on the same machine. A deployed host needs a separately hosted model provider.
 
 ## 🩺 Troubleshooting
 
