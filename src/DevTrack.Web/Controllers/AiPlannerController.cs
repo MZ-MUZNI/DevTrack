@@ -60,6 +60,11 @@ public sealed class AiPlannerController(
             logger.LogWarning(exception, "Local AI model is unavailable.");
             ModelState.AddModelError(string.Empty, "The local AI model is unavailable. Start Ollama and confirm Gemma 4 is installed.");
         }
+        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(exception, "Local AI model did not respond before the timeout.");
+            ModelState.AddModelError(string.Empty, "The local AI model took longer than three minutes to respond. Try again after it has warmed up, or use a smaller model.");
+        }
         catch (InvalidOperationException exception)
         {
             logger.LogWarning(exception, "Local AI model returned an invalid plan.");

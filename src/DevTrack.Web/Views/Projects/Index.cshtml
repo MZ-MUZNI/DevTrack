@@ -11,26 +11,28 @@
 </p>
 
 <div class="table-card">
-    <table class="table">
+    <table class="table responsive-table">
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Description</th>
                 <th>Created</th>
-                <th></th>
+                <th class="action-column">Actions</th>
             </tr>
         </thead>
         <tbody>
         @foreach (var project in Model)
         {
             <tr>
-                <td>@project.Name</td>
-                <td>@project.Description</td>
-                <td>@project.CreatedAt.ToShortDateString()</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@project.Id" class="btn btn-sm btn-outline-secondary">Details</a>
-                    <a asp-action="Edit" asp-route-id="@project.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@project.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                <td data-label="Name">@project.Name</td>
+                <td data-label="Description">@project.Description</td>
+                <td data-label="Created">@project.CreatedAt.ToShortDateString()</td>
+                <td data-label="Actions" class="action-cell">
+                    <div class="row-actions">
+                        <a asp-action="Details" asp-route-id="@project.Id" class="btn btn-sm btn-outline-secondary">Details</a>
+                        <a asp-action="Edit" asp-route-id="@project.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@project.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </div>
                 </td>
             </tr>
         }

@@ -51,6 +51,14 @@ public sealed class TaskSuggestionsController(
                 title: "The local AI model is unavailable.",
                 detail: "Start Ollama and ensure the configured model has been downloaded.");
         }
+        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(exception, "Local task-planning model timed out.");
+            return Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "The local AI model took too long to respond.",
+                detail: "Try again after the model has warmed up, or use a smaller model.");
+        }
         catch (InvalidOperationException exception)
         {
             logger.LogWarning(exception, "Local task-planning model returned an invalid response.");

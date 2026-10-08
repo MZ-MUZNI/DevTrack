@@ -17,15 +17,44 @@
     --danger: #F87171;
     --text: #F1F5F9;
     --text-muted: #94A3B8;
+    --table-stripe: rgba(15, 23, 42, 0.3);
     --font-display: 'Space Grotesk', sans-serif;
     --font-body: 'Inter', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 }
 
-html, body {
+:root.theme-light {
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --surface-hover: #EAF0F7;
+    --border: #CBD5E1;
+    --accent: #0891B2;
+    --accent-hover: #0E7490;
+    --success: #059669;
+    --warning: #B45309;
+    --danger: #DC2626;
+    --text: #0F172A;
+    --text-muted: #475569;
+    --table-stripe: #F1F5F9;
+}
+
+html {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
     background-color: var(--bg);
     color: var(--text);
     font-family: var(--font-body);
+}
+
+.site-content {
+    flex: 1 0 auto;
+    width: 100%;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -70,6 +99,19 @@ a {
 
 .navbar-toggler {
     border-color: var(--border) !important;
+}
+
+.nav-utilities {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
 }
 
 /* ---------- Buttons ---------- */
@@ -123,6 +165,12 @@ a {
 
 /* ---------- Tables ---------- */
 .table {
+    --bs-table-color: var(--text);
+    --bs-table-bg: transparent;
+    --bs-table-striped-color: var(--text);
+    --bs-table-striped-bg: var(--table-stripe);
+    --bs-table-hover-color: var(--text);
+    --bs-table-hover-bg: var(--surface-hover);
     color: var(--text);
     border-color: var(--border);
 }
@@ -144,7 +192,29 @@ a {
 
 .table td, .table th {
     border-color: var(--border);
+    overflow-wrap: break-word;
 }
+
+.work-item-title {
+    min-width: 16rem;
+}
+
+.action-column,
+.action-cell {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.row-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+}
+
+    .row-actions .btn {
+        flex: 0 0 auto;
+    }
 
 /* ---------- Table card wrapper ---------- */
 .table-card {
@@ -302,9 +372,13 @@ a {
 
 /* ---------- Footer ---------- */
 .footer {
+    position: static !important;
+    flex-shrink: 0;
     background-color: var(--surface);
     border-top: 1px solid var(--border) !important;
     color: var(--text-muted) !important;
+    margin-top: 2rem;
+    padding: 1rem 0;
 }
 
     .footer a {
@@ -368,6 +442,14 @@ a {
     margin-top: 0.75rem;
 }
 
+:root.theme-light .table-card .table thead th {
+    background: #F1F5F9;
+}
+
+:root.theme-light .suggestion-card {
+    background: #F8FAFC;
+}
+
 .suggestion-check {
     flex: 0 0 auto;
     margin-top: 0.3rem;
@@ -379,4 +461,127 @@ a {
 
 .hours-input {
     max-width: 8rem;
+}
+
+/* ---------- Responsive layout ---------- */
+@media (max-width: 767.98px) {
+    .site-content {
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+    }
+
+    .navbar .container-fluid {
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+    }
+
+    .navbar-collapse {
+        padding-top: 0.5rem;
+    }
+
+    .nav-utilities {
+        align-items: flex-start;
+        flex-direction: column;
+        padding-top: 0.5rem;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 0.65rem 0;
+    }
+
+    h1 {
+        font-size: 1.85rem;
+    }
+
+    .hero {
+        padding: 2.75rem 0 2.25rem;
+    }
+
+    .hero h1 {
+        font-size: 2.1rem;
+    }
+
+    .planner-header {
+        padding: 1.75rem 0 1rem;
+    }
+
+    .planner-card {
+        padding: 1rem;
+    }
+
+    .planner-result-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .suggestion-card {
+        padding: 0.85rem;
+    }
+
+    .table-card {
+        overflow: visible;
+        background: transparent;
+        border: 0;
+    }
+
+    .responsive-table,
+    .responsive-table tbody,
+    .responsive-table tr,
+    .responsive-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .responsive-table thead {
+        display: none;
+    }
+
+    .responsive-table tr {
+        margin-bottom: 0.85rem;
+        padding: 0.35rem 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+    }
+
+    .table-card .responsive-table td {
+        display: grid;
+        grid-template-columns: minmax(6.75rem, 38%) minmax(0, 1fr);
+        gap: 0.75rem;
+        padding: 0.7rem 0.9rem;
+        border: 0;
+        white-space: normal;
+    }
+
+    .responsive-table td::before {
+        content: attr(data-label);
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .table-card .responsive-table .action-cell {
+        display: block;
+        width: 100%;
+    }
+
+    .responsive-table .action-cell::before {
+        display: none;
+    }
+
+    .row-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .work-item-title {
+        min-width: 0;
+    }
+
+    .footer {
+        margin-top: 1rem;
+    }
 }

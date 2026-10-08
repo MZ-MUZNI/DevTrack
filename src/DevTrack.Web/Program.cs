@@ -57,7 +57,7 @@ builder.Services.AddHttpClient<ITaskPlanningService, OllamaTaskPlanningService>(
 {
     var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<OllamaOptions>>().Value;
     client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
-    client.Timeout = TimeSpan.FromSeconds(45);
+    client.Timeout = TimeSpan.FromSeconds(options.RequestTimeoutSeconds);
 });
 
 builder.Services.AddScoped<IEmailSender, DevTrackEmailSender>();

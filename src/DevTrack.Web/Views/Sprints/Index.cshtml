@@ -11,30 +11,32 @@
 </p>
 
 <div class="table-card">
-    <table class="table">
+    <table class="table responsive-table">
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Project</th>
                 <th>Start</th>
                 <th>End</th>
-                <th></th>
+                <th class="action-column">Actions</th>
             </tr>
         </thead>
         <tbody>
         @foreach (var sprint in Model)
         {
             <tr>
-                <td>@sprint.Name</td>
+                <td data-label="Name">@sprint.Name</td>
                 @* sprint.Project could be null here because GetAllAsync() does a plain
                    query with no .Include() - EF Core does NOT auto-load related data.
                    We'll fix this properly with eager loading in the Services lesson. *@
-                <td>@(sprint.Project?.Name ?? $"(Project #{sprint.ProjectId})")</td>
-                <td>@sprint.StartDate.ToShortDateString()</td>
-                <td>@sprint.EndDate.ToShortDateString()</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@sprint.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@sprint.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                <td data-label="Project">@(sprint.Project?.Name ?? $"(Project #{sprint.ProjectId})")</td>
+                <td data-label="Start">@sprint.StartDate.ToShortDateString()</td>
+                <td data-label="End">@sprint.EndDate.ToShortDateString()</td>
+                <td data-label="Actions" class="action-cell">
+                    <div class="row-actions">
+                        <a asp-action="Edit" asp-route-id="@sprint.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@sprint.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </div>
                 </td>
             </tr>
         }

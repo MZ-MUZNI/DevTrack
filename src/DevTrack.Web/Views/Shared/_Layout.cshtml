@@ -4,6 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - DevTrack.Web</title>
+    <script>
+        if (localStorage.getItem("devtrack-theme") === "light") {
+            document.documentElement.classList.add("theme-light");
+        }
+    </script>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -39,12 +44,18 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                     </ul>
-                    <partial name="~/Areas/Identity/Pages/_LoginPartial.cshtml" />
+                    <div class="nav-utilities">
+                        <button id="themeToggle" class="btn btn-outline-secondary theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false">
+                            <span class="theme-toggle-icon" aria-hidden="true">&#9728;</span>
+                            <span class="theme-toggle-label">Light mode</span>
+                        </button>
+                        <partial name="~/Areas/Identity/Pages/_LoginPartial.cshtml" />
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container site-content">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
