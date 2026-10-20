@@ -76,6 +76,9 @@ flowchart TB
 ## Important traced workflow: MVC work-item creation
 
 ```mermaid
+---
+id: 09464955-211b-4cba-9555-00a90bdc1c03
+---
 sequenceDiagram
     actor U as Signed-in user
     participant C as WorkItemsController
@@ -91,12 +94,12 @@ sequenceDiagram
     DB-->>SR: Sprint / null
     alt missing or ended sprint
       S-->>C: InvalidOperationException
-      C->>C: Add model-level error; reload sprint list
+      C->>C: Add model-level error&#59; reload sprint list
       C-->>U: 200 form with validation message
     else valid sprint
       S->>WR: AddAsync(workItem)
       S->>WR: SaveChangesAsync()
-      WR->>DB: INSERT WorkItems; EF transaction for SaveChanges
+      WR->>DB: INSERT WorkItems&#59; EF transaction for SaveChanges
       DB-->>WR: commit
       S-->>C: complete
       C-->>U: 302 redirect to Index
