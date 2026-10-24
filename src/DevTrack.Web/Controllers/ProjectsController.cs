@@ -2,6 +2,8 @@ using DevTrack.Core.Entities;
 using DevTrack.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using DevTrack.Web.Models;
+using System.Security.Claims;
 
 namespace DevTrack.Web.Controllers;
 
@@ -21,7 +23,7 @@ public class ProjectsController : Controller
     // GET: /Projects
     public async Task<IActionResult> Index()
     {
-        var projects = await _projectRepository.GetAllAsync();
+        var projects = (await _projectRepository.GetAllAsync()).Where(CanAccess);
         return View(projects); // looks for Views/Projects/Index.cshtml
     }
 
@@ -29,7 +31,7 @@ public class ProjectsController : Controller
     public async Task<IActionResult> Details(int id)
     {
         var project = await _projectRepository.GetByIdAsync(id);
-        if (project is null) return NotFound();
+        if (project is null || !CanAccess(project)) return NotFound();
         return View(project);
     }
 
@@ -42,14 +44,20 @@ public class ProjectsController : Controller
     // POST: /Projects/Create
     [HttpPost]
     [ValidateAntiForgeryToken] // CSRF protection - security-relevant, mention this in interviews
-    public async Task<IActionResult> Create([Bind("Name,Description")] ProjectEntity project)
+    public async Task<IActionResult> Create(ProjectFormViewModel model)
     {
         // ModelState.IsValid checks the [Required]/[MaxLength] etc. data
         // annotations on the model automatically - no manual if-checks needed.
         if (!ModelState.IsValid)
         {
-            return View(project);
+            return View(model);
         }
+
+        var project = new ProjectEntity
+        {
+            Name = model.Name.Trim(), Description = model.Description?.Trim(),
+            OwnerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Authenticated user identifier is missing.")
+        };
 
         await _projectRepository.AddAsync(project);
         await _projectRepository.SaveChangesAsync();
@@ -61,17 +69,22 @@ public class ProjectsController : Controller
     {
         var project = await _projectRepository.GetByIdAsync(id);
         if (project is null) return NotFound();
-        return View(project);
+        if (project is null || !CanAccess(project)) return NotFound();
+        return View(ToFormModel(project));
     }
 
     // POST: /Projects/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,CreatedAt")] ProjectEntity project)
+    public async Task<IActionResult> Edit(int id, ProjectFormViewModel model)
     {
-        if (id != project.Id) return BadRequest();
-        if (!ModelState.IsValid) return View(project);
+        if (id != model.Id) return BadRequest();
+        var project = await _projectRepository.GetByIdAsync(id);
+        if (project is null || !CanAccess(project)) return NotFound();
+        if (!ModelState.IsValid) return View(model);
 
+        project.Name = model.Name.Trim();
+        project.Description = model.Description?.Trim();
         _projectRepository.Update(project);
         await _projectRepository.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
@@ -82,7 +95,7 @@ public class ProjectsController : Controller
     public async Task<IActionResult> Delete(int id)
     {
         var project = await _projectRepository.GetByIdAsync(id);
-        if (project is null) return NotFound();
+        if (project is null || !CanAccess(project)) return NotFound();
         return View(project);
     }
 
@@ -93,10 +106,18 @@ public class ProjectsController : Controller
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var project = await _projectRepository.GetByIdAsync(id);
-        if (project is null) return NotFound();
+        if (project is null || !CanAccess(project)) return NotFound();
 
         _projectRepository.Delete(project);
         await _projectRepository.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
+
+    private bool CanAccess(ProjectEntity project) =>
+        User.IsInRole("Admin") || project.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    private static ProjectFormViewModel ToFormModel(ProjectEntity project) => new()
+    {
+        Id = project.Id, Name = project.Name, Description = project.Description
+    };
 }

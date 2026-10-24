@@ -13,7 +13,8 @@ namespace DevTrack.Web.Services
 
         public Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
-            _logger.LogInformation("EMAIL to {Email} | {Subject}\n{Message}", email, subject, htmlMessage);
+            // Messages can contain password-reset and confirmation tokens. Never log their body.
+            _logger.LogInformation("Email requested for {Email} with subject {Subject}.", email, subject);
             return Task.CompletedTask;
         }
 

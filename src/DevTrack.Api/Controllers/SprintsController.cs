@@ -11,24 +11,25 @@ namespace DevTrack.Api.Controllers;
 [Route("api/sprints")]
 public sealed class SprintsController(
     ISprintRepository sprints,
-    IRepository<ProjectEntity> projects) : ControllerBase
+    IRepository<ProjectEntity> projects,
+    IAuthorizationService authorization) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<SprintResponse>>> GetAll() =>
-        Ok((await sprints.GetAllWithProjectAsync()).Select(ToResponse));
+        Ok((await sprints.GetAllWithProjectAsync()).Where(sprint => CanAccess(sprint.Project)).Select(ToResponse));
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<SprintResponse>> GetById(int id)
     {
         var sprint = await sprints.GetByIdAsync(id);
-        if (sprint is null) return NotFound();
+        if (sprint is null || !await CanAccessProjectAsync(sprint.ProjectId)) return NotFound();
         return Ok(ToResponse(sprint));
     }
 
     [HttpPost]
     public async Task<ActionResult<SprintResponse>> Create(SprintRequest request)
     {
-        if (await projects.GetByIdAsync(request.ProjectId) is null)
+        if (!await CanAccessProjectAsync(request.ProjectId))
         {
             return BadRequest(new ValidationProblemDetails(new Dictionary<string, string[]>
             {
@@ -46,8 +47,8 @@ public sealed class SprintsController(
     public async Task<ActionResult<SprintResponse>> Update(int id, SprintRequest request)
     {
         var sprint = await sprints.GetByIdAsync(id);
-        if (sprint is null) return NotFound();
-        if (await projects.GetByIdAsync(request.ProjectId) is null)
+        if (sprint is null || !await CanAccessProjectAsync(sprint.ProjectId)) return NotFound();
+        if (!await CanAccessProjectAsync(request.ProjectId))
         {
             return BadRequest(new ValidationProblemDetails(new Dictionary<string, string[]>
             {
@@ -69,7 +70,7 @@ public sealed class SprintsController(
     public async Task<IActionResult> Delete(int id)
     {
         var sprint = await sprints.GetByIdAsync(id);
-        if (sprint is null) return NotFound();
+        if (sprint is null || !await CanAccessProjectAsync(sprint.ProjectId)) return NotFound();
         sprints.Delete(sprint);
         await sprints.SaveChangesAsync();
         return NoContent();
@@ -84,4 +85,13 @@ public sealed class SprintsController(
     private static SprintResponse ToResponse(Sprint sprint) => new(
         sprint.Id, sprint.Name, sprint.StartDate, sprint.EndDate,
         sprint.ProjectId, sprint.Project?.Name);
+
+    private bool CanAccess(ProjectEntity? project) => project is not null &&
+        (User.IsInRole("Admin") || project.OwnerId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+
+    private async Task<bool> CanAccessProjectAsync(int projectId)
+    {
+        var project = await projects.GetByIdAsync(projectId);
+        return project is not null && (await authorization.AuthorizeAsync(User, project, "ProjectAccess")).Succeeded;
+    }
 }

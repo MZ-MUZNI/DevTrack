@@ -3,19 +3,22 @@ using DevTrack.Core.Entities;
 using DevTrack.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DevTrack.Api.Controllers;
 
 [ApiController]
 [Authorize]
 [Route("api/projects")]
-public sealed class ProjectsController(IRepository<ProjectEntity> projects) : ControllerBase
+public sealed class ProjectsController(
+    IRepository<ProjectEntity> projects,
+    IAuthorizationService authorization) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<IEnumerable<ProjectResponse>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetAll()
     {
-        var results = (await projects.GetAllAsync()).Select(ToResponse);
+        var results = (await projects.GetAllAsync()).Where(CanAccess).Select(ToResponse);
         return Ok(results);
     }
 
@@ -25,14 +28,19 @@ public sealed class ProjectsController(IRepository<ProjectEntity> projects) : Co
     public async Task<ActionResult<ProjectResponse>> GetById(int id)
     {
         var project = await projects.GetByIdAsync(id);
-        return project is null ? NotFound() : Ok(ToResponse(project));
+        if (project is null || !await CanAccessAsync(project)) return NotFound();
+        return Ok(ToResponse(project));
     }
 
     [HttpPost]
     [ProducesResponseType<ProjectResponse>(StatusCodes.Status201Created)]
     public async Task<ActionResult<ProjectResponse>> Create(ProjectRequest request)
     {
-        var project = new ProjectEntity { Name = request.Name.Trim(), Description = request.Description?.Trim() };
+        var project = new ProjectEntity
+        {
+            Name = request.Name.Trim(), Description = request.Description?.Trim(),
+            OwnerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Authenticated user identifier is missing.")
+        };
         await projects.AddAsync(project);
         await projects.SaveChangesAsync();
         var response = ToResponse(project);
@@ -45,7 +53,7 @@ public sealed class ProjectsController(IRepository<ProjectEntity> projects) : Co
     public async Task<ActionResult<ProjectResponse>> Update(int id, ProjectRequest request)
     {
         var project = await projects.GetByIdAsync(id);
-        if (project is null) return NotFound();
+        if (project is null || !await CanAccessAsync(project)) return NotFound();
 
         project.Name = request.Name.Trim();
         project.Description = request.Description?.Trim();
@@ -61,7 +69,7 @@ public sealed class ProjectsController(IRepository<ProjectEntity> projects) : Co
     public async Task<IActionResult> Delete(int id)
     {
         var project = await projects.GetByIdAsync(id);
-        if (project is null) return NotFound();
+        if (project is null || !await CanAccessAsync(project)) return NotFound();
 
         projects.Delete(project);
         await projects.SaveChangesAsync();
@@ -70,4 +78,10 @@ public sealed class ProjectsController(IRepository<ProjectEntity> projects) : Co
 
     private static ProjectResponse ToResponse(ProjectEntity project) =>
         new(project.Id, project.Name, project.Description, project.CreatedAt);
+
+    private bool CanAccess(ProjectEntity project) =>
+        User.IsInRole("Admin") || project.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    private async Task<bool> CanAccessAsync(ProjectEntity project) =>
+        (await authorization.AuthorizeAsync(User, project, "ProjectAccess")).Succeeded;
 }

@@ -104,6 +104,14 @@ This creates `DevTrackDb` and `DevTrackIdentityDb` on your local `(localdb)\MSSQ
 
 ### 5. Run the application
 
+Before running the API locally, store a unique signing key outside source control:
+
+```powershell
+dotnet user-secrets set "Jwt:Key" "use-a-random-32-byte-or-longer-local-key" --project src/DevTrack.Api
+```
+
+Production deployments must provide `Jwt__Key` through their secret store. The tracked API configuration deliberately contains no signing key.
+
 ```bash
 dotnet run --project src\DevTrack.Web
 ```

@@ -48,6 +48,35 @@ public sealed class WorkItemServiceTests
     }
 
     [Fact]
+    public async Task CreateManyAsync_WhenSprintIsActive_AddsAllItemsAndSavesOnce()
+    {
+        var workItems = new FakeWorkItemRepository();
+        var service = CreateService(workItems, new Sprint { Id = 7, EndDate = DateTime.UtcNow.AddDays(1) });
+
+        await service.CreateManyAsync([
+            new WorkItem { SprintId = 7, Title = "First" },
+            new WorkItem { SprintId = 7, Title = "Second" }
+        ]);
+
+        Assert.Equal(2, workItems.Added.Count);
+        Assert.Equal(1, workItems.SaveChangesCalls);
+    }
+
+    [Fact]
+    public async Task CreateManyAsync_WhenItemsUseDifferentSprints_DoesNotPersist()
+    {
+        var workItems = new FakeWorkItemRepository();
+        var service = CreateService(workItems, new Sprint { Id = 7, EndDate = DateTime.UtcNow.AddDays(1) });
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateManyAsync([
+            new WorkItem { SprintId = 7 }, new WorkItem { SprintId = 8 }
+        ]));
+
+        Assert.Empty(workItems.Added);
+        Assert.Equal(0, workItems.SaveChangesCalls);
+    }
+
+    [Fact]
     public async Task UpdateAsync_WhenSprintIsActive_UpdatesAndSavesWorkItem()
     {
         var workItems = new FakeWorkItemRepository();
@@ -137,7 +166,7 @@ public sealed class WorkItemServiceTests
     }
 
     private static WorkItemService CreateService(FakeWorkItemRepository workItems, Sprint? sprint) =>
-        new(workItems, new FakeSprintRepository { SprintById = sprint });
+        new(workItems, new FakeSprintRepository { SprintById = sprint }, TimeProvider.System, TimeZoneInfo.Utc);
 
     private sealed class FakeWorkItemRepository : IWorkItemRepository
     {
@@ -151,6 +180,7 @@ public sealed class WorkItemServiceTests
         public Task<WorkItem?> GetByIdAsync(int id) => Task.FromResult(WorkItemById);
         public Task<IEnumerable<WorkItem>> GetAllAsync() => Task.FromResult<IEnumerable<WorkItem>>([]);
         public Task AddAsync(WorkItem entity) { Added.Add(entity); return Task.CompletedTask; }
+        public Task AddRangeAsync(IEnumerable<WorkItem> entities) { Added.AddRange(entities); return Task.CompletedTask; }
         public void Update(WorkItem entity) => Updated.Add(entity);
         public void Delete(WorkItem entity) => Deleted.Add(entity);
         public Task<int> SaveChangesAsync() { SaveChangesCalls++; return Task.FromResult(1); }
@@ -165,6 +195,7 @@ public sealed class WorkItemServiceTests
         public Task<Sprint?> GetByIdAsync(int id) => Task.FromResult(SprintById);
         public Task<IEnumerable<Sprint>> GetAllAsync() => Task.FromResult<IEnumerable<Sprint>>([]);
         public Task AddAsync(Sprint entity) => Task.CompletedTask;
+        public Task AddRangeAsync(IEnumerable<Sprint> entities) => Task.CompletedTask;
         public void Update(Sprint entity) { }
         public void Delete(Sprint entity) { }
         public Task<int> SaveChangesAsync() => Task.FromResult(1);

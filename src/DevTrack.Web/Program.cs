@@ -12,6 +12,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.AddJsonConsole();
+
+var businessTimeZoneId = builder.Configuration["BusinessTimeZone"] ?? "UTC";
+var ollamaBaseUri = ValidateOllamaBaseUri(builder.Configuration["Ollama:BaseUrl"]);
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton(_ => TimeZoneInfo.FindSystemTimeZoneById(businessTimeZoneId));
 
 builder.Services.AddDbContext<DevTrackDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DevTrackConnection")));
@@ -56,7 +62,7 @@ builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection(Ollam
 builder.Services.AddHttpClient<ITaskPlanningService, OllamaTaskPlanningService>((serviceProvider, client) =>
 {
     var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<OllamaOptions>>().Value;
-    client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+    client.BaseAddress = ollamaBaseUri;
     client.Timeout = TimeSpan.FromSeconds(options.RequestTimeoutSeconds);
 });
 
@@ -75,6 +81,10 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
 });
+
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<DevTrackDbContext>("domain-database")
+    .AddDbContextCheck<DevTrackIdentityDbContext>("identity-database");
 
 var app = builder.Build();
 
@@ -101,10 +111,24 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'");
+    await next();
+});
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false
+});
+app.MapHealthChecks("/health/ready").RequireAuthorization("AdminOnly");
 
 app.MapStaticAssets();
 
@@ -116,3 +140,15 @@ app.MapControllerRoute(
 app.MapRazorPages(); // needed for the scaffolded Identity pages to be routable
 
 app.Run();
+
+static Uri ValidateOllamaBaseUri(string? configuredValue)
+{
+    if (!Uri.TryCreate(configuredValue, UriKind.Absolute, out var uri) ||
+        !string.IsNullOrEmpty(uri.UserInfo) ||
+        (uri.Scheme != Uri.UriSchemeHttps && !(uri.Scheme == Uri.UriSchemeHttp && uri.IsLoopback)))
+    {
+        throw new InvalidOperationException("Ollama:BaseUrl must be HTTPS, or HTTP on a loopback address.");
+    }
+
+    return new Uri(uri.ToString().TrimEnd('/') + "/");
+}

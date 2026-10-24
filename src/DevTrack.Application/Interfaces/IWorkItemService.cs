@@ -10,6 +10,7 @@ namespace DevTrack.Application.Interfaces
         Task<IEnumerable<WorkItem>> GetAllAsync();
         Task<WorkItem?> GetByIdAsync(int id);
         Task CreateAsync(WorkItem workItem);
+        Task CreateManyAsync(IEnumerable<WorkItem> workItems);
         Task UpdateAsync(WorkItem workItem);
         Task DeleteAsync(int id);
     }

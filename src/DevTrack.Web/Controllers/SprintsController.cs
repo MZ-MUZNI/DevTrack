@@ -3,6 +3,8 @@ using DevTrack.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using DevTrack.Web.Models;
+using System.Security.Claims;
 
 namespace DevTrack.Web.Controllers;
 
@@ -28,7 +30,7 @@ public class SprintsController : Controller
     public async Task<IActionResult> Index()
     {
         // Now using the eager-loaded query, so sprint.Project is populated
-        var sprints = await _sprintRepository.GetAllWithProjectAsync();
+        var sprints = (await _sprintRepository.GetAllWithProjectAsync()).Where(CanAccess);
         return View(sprints);
     }
 
@@ -42,13 +44,16 @@ public class SprintsController : Controller
     // POST: /Sprints/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Name,StartDate,EndDate,ProjectId")] Sprint sprint)
+    public async Task<IActionResult> Create(SprintFormViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            await PopulateProjectsDropdown(sprint.ProjectId);
-            return View(sprint);
+            await PopulateProjectsDropdown(model.ProjectId);
+            return View(model);
         }
+        if (!await CanAccessProjectAsync(model.ProjectId)) return NotFound();
+
+        var sprint = new Sprint { Name = model.Name.Trim(), StartDate = model.StartDate.Date, EndDate = model.EndDate.Date, ProjectId = model.ProjectId };
 
         await _sprintRepository.AddAsync(sprint);
         await _sprintRepository.SaveChangesAsync();
@@ -59,24 +64,31 @@ public class SprintsController : Controller
     public async Task<IActionResult> Edit(int id)
     {
         var sprint = await _sprintRepository.GetByIdAsync(id);
-        if (sprint is null) return NotFound();
+        if (sprint is null || !await CanAccessProjectAsync(sprint.ProjectId)) return NotFound();
 
         await PopulateProjectsDropdown(sprint.ProjectId);
-        return View(sprint);
+        return View(ToFormModel(sprint));
     }
 
     // POST: /Sprints/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,Name,StartDate,EndDate,ProjectId")] Sprint sprint)
+    public async Task<IActionResult> Edit(int id, SprintFormViewModel model)
     {
-        if (id != sprint.Id) return BadRequest();
+        if (id != model.Id) return BadRequest();
 
         if (!ModelState.IsValid)
         {
-            await PopulateProjectsDropdown(sprint.ProjectId);
-            return View(sprint);
+            await PopulateProjectsDropdown(model.ProjectId);
+            return View(model);
         }
+
+        var sprint = await _sprintRepository.GetByIdAsync(id);
+        if (sprint is null || !await CanAccessProjectAsync(sprint.ProjectId) || !await CanAccessProjectAsync(model.ProjectId)) return NotFound();
+        sprint.Name = model.Name.Trim();
+        sprint.StartDate = model.StartDate.Date;
+        sprint.EndDate = model.EndDate.Date;
+        sprint.ProjectId = model.ProjectId;
 
         _sprintRepository.Update(sprint);
         await _sprintRepository.SaveChangesAsync();
@@ -88,7 +100,7 @@ public class SprintsController : Controller
     public async Task<IActionResult> Delete(int id)
     {
         var sprint = await _sprintRepository.GetByIdAsync(id);
-        if (sprint is null) return NotFound();
+        if (sprint is null || !await CanAccessProjectAsync(sprint.ProjectId)) return NotFound();
         return View(sprint);
     }
 
@@ -99,7 +111,7 @@ public class SprintsController : Controller
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var sprint = await _sprintRepository.GetByIdAsync(id);
-        if (sprint is null) return NotFound();
+        if (sprint is null || !await CanAccessProjectAsync(sprint.ProjectId)) return NotFound();
 
         _sprintRepository.Delete(sprint);
         await _sprintRepository.SaveChangesAsync();
@@ -111,7 +123,24 @@ public class SprintsController : Controller
     // failure so the dropdown doesn't reset to blank).
     private async Task PopulateProjectsDropdown(int? selectedProjectId = null)
     {
-        var projects = await _projectRepository.GetAllAsync();
+        var projects = (await _projectRepository.GetAllAsync()).Where(CanAccessProject);
         ViewBag.ProjectId = new SelectList(projects, "Id", "Name", selectedProjectId);
+    }
+
+    private static SprintFormViewModel ToFormModel(Sprint sprint) => new()
+    {
+        Id = sprint.Id, Name = sprint.Name, StartDate = sprint.StartDate,
+        EndDate = sprint.EndDate, ProjectId = sprint.ProjectId
+    };
+
+    private bool CanAccess(Sprint sprint) => sprint.Project is not null && CanAccessProject(sprint.Project);
+
+    private bool CanAccessProject(ProjectEntity project) =>
+        User.IsInRole("Admin") || project.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    private async Task<bool> CanAccessProjectAsync(int projectId)
+    {
+        var project = await _projectRepository.GetByIdAsync(projectId);
+        return project is not null && CanAccessProject(project);
     }
 }

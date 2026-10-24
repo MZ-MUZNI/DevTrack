@@ -5,12 +5,14 @@ using DevTrack.Core.Interfaces;
 using DevTrack.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
 
 namespace DevTrack.Web.Controllers;
 
 public sealed class AiPlannerController(
     ITaskPlanningService taskPlanning,
     ISprintRepository sprints,
+    IRepository<ProjectEntity> projects,
     IWorkItemService workItems,
     ILogger<AiPlannerController> logger) : Controller
 {
@@ -33,7 +35,7 @@ public sealed class AiPlannerController(
         }
 
         var sprint = await sprints.GetByIdAsync(model.SprintId);
-        if (sprint is null)
+        if (sprint is null || !await CanAccessSprintAsync(sprint))
         {
             ModelState.AddModelError(nameof(model.SprintId), "The selected sprint no longer exists.");
             await PopulateSprintsAsync(model);
@@ -92,17 +94,18 @@ public sealed class AiPlannerController(
 
         try
         {
-            foreach (var suggestion in model.Suggestions.Where(suggestion => suggestion.Selected))
-            {
-                await workItems.CreateAsync(new WorkItem
+            var sprint = await sprints.GetByIdAsync(model.SprintId);
+            if (sprint is null || !await CanAccessSprintAsync(sprint)) return NotFound();
+            await workItems.CreateManyAsync(model.Suggestions
+                .Where(suggestion => suggestion.Selected)
+                .Select(suggestion => new WorkItem
                 {
                     Title = suggestion.Title.Trim(),
                     Description = suggestion.Description.Trim(),
                     EstimatedHours = suggestion.EstimatedHours,
                     SprintId = model.SprintId,
                     Status = WorkItemStatus.Backlog
-                });
-            }
+                }));
         }
         catch (InvalidOperationException exception)
         {
@@ -117,8 +120,15 @@ public sealed class AiPlannerController(
 
     private async Task PopulateSprintsAsync(AiPlannerViewModel model)
     {
-        model.Sprints = (await sprints.GetAllAsync())
+        model.Sprints = (await sprints.GetAllWithProjectAsync())
+            .Where(sprint => CanAccess(sprint.Project))
             .Select(sprint => new SelectListItem(sprint.Name, sprint.Id.ToString(), sprint.Id == model.SprintId))
             .ToList();
     }
+
+    private bool CanAccess(ProjectEntity? project) => project is not null &&
+        (User.IsInRole("Admin") || project.OwnerId == User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+    private async Task<bool> CanAccessSprintAsync(Sprint sprint) =>
+        CanAccess(await projects.GetByIdAsync(sprint.ProjectId));
 }

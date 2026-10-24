@@ -11,13 +11,19 @@ namespace DevTrack.Application.Services
     {
         private readonly IWorkItemRepository _workItemRepository;
         private readonly ISprintRepository _sprintRepository;
+        private readonly TimeProvider _timeProvider;
+        private readonly TimeZoneInfo _businessTimeZone;
 
         public WorkItemService(
             IWorkItemRepository workItemRepository, 
-            ISprintRepository sprintRepository)
+            ISprintRepository sprintRepository,
+            TimeProvider timeProvider,
+            TimeZoneInfo businessTimeZone)
         {
             _workItemRepository = workItemRepository;
             _sprintRepository = sprintRepository;
+            _timeProvider = timeProvider;
+            _businessTimeZone = businessTimeZone;
         }
 
         public async Task<IEnumerable<WorkItem>> GetAllAsync()
@@ -41,13 +47,32 @@ namespace DevTrack.Application.Services
                     $"Sprint with Id {workItem.SprintId} does not exist.");
             }
 
-            if (sprint.EndDate < DateTime.Now)
+            if (HasEnded(sprint))
             {
                 throw new InvalidOperationException(
                     $"Cannot add a work item to sprint '{sprint.Name}' because it has already ended.");
             }
 
             await _workItemRepository.AddAsync(workItem);
+            await _workItemRepository.SaveChangesAsync();
+        }
+
+        public async Task CreateManyAsync(IEnumerable<WorkItem> workItems)
+        {
+            var items = workItems.ToList();
+            if (items.Count == 0) return;
+
+            var sprintIds = items.Select(item => item.SprintId).Distinct().ToList();
+            if (sprintIds.Count != 1)
+                throw new InvalidOperationException("All work items in a batch must belong to the same sprint.");
+
+            var sprint = await _sprintRepository.GetByIdAsync(sprintIds[0]);
+            if (sprint is null)
+                throw new InvalidOperationException($"Sprint with Id {sprintIds[0]} does not exist.");
+            if (HasEnded(sprint))
+                throw new InvalidOperationException($"Cannot add work items to sprint '{sprint.Name}' because it has already ended.");
+
+            await _workItemRepository.AddRangeAsync(items);
             await _workItemRepository.SaveChangesAsync();
         }
 
@@ -63,7 +88,7 @@ namespace DevTrack.Application.Services
                     $"Sprint with Id {workItem.SprintId} does not exist.");
             }
 
-            if (sprint.EndDate < DateTime.Now)
+            if (HasEnded(sprint))
             {
                 throw new InvalidOperationException(
                     $"Cannot move a work item into sprint '{sprint.Name}' because it has already ended.");
@@ -72,6 +97,10 @@ namespace DevTrack.Application.Services
             _workItemRepository.Update(workItem);
             await _workItemRepository.SaveChangesAsync();
         }
+
+        // Sprint dates are calendar days in the configured business time zone; an end date is inclusive.
+        private bool HasEnded(Sprint sprint) =>
+            sprint.EndDate.Date < TimeZoneInfo.ConvertTime(_timeProvider.GetUtcNow(), _businessTimeZone).Date;
 
         public async Task DeleteAsync(int id)
         {

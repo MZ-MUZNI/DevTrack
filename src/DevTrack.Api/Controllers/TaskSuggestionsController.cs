@@ -1,6 +1,7 @@
 using DevTrack.Api.Contracts;
 using DevTrack.Core.AI;
 using DevTrack.Core.Interfaces;
+using DevTrack.Core.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,6 +13,8 @@ namespace DevTrack.Api.Controllers;
 public sealed class TaskSuggestionsController(
     ITaskPlanningService taskPlanning,
     ISprintRepository sprints,
+    IRepository<ProjectEntity> projects,
+    IAuthorizationService authorization,
     ILogger<TaskSuggestionsController> logger) : ControllerBase
 {
     [HttpPost]
@@ -23,7 +26,7 @@ public sealed class TaskSuggestionsController(
         CancellationToken cancellationToken)
     {
         var sprint = await sprints.GetByIdAsync(request.SprintId);
-        if (sprint is null)
+        if (sprint is null || !await CanAccessProjectAsync(sprint.ProjectId))
         {
             return BadRequest(new ValidationProblemDetails(new Dictionary<string, string[]>
             {
@@ -66,5 +69,11 @@ public sealed class TaskSuggestionsController(
                 statusCode: StatusCodes.Status503ServiceUnavailable,
                 title: "The local AI model returned an invalid response.");
         }
+    }
+
+    private async Task<bool> CanAccessProjectAsync(int projectId)
+    {
+        var project = await projects.GetByIdAsync(projectId);
+        return project is not null && (await authorization.AuthorizeAsync(User, project, "ProjectAccess")).Succeeded;
     }
 }

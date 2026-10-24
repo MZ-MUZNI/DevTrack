@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace DevTrack.Api.Controllers;
 
@@ -16,6 +17,7 @@ namespace DevTrack.Api.Controllers;
 public sealed class AuthController(UserManager<ApplicationUser> users, IConfiguration configuration) : ControllerBase
 {
     [HttpPost("register")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
         var user = new ApplicationUser { UserName = request.Email, Email = request.Email, DisplayName = request.DisplayName?.Trim(), EmailConfirmed = true };
@@ -31,6 +33,7 @@ public sealed class AuthController(UserManager<ApplicationUser> users, IConfigur
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("auth")]
     public async Task<ActionResult<TokenResponse>> Login(LoginRequest request)
     {
         var user = await users.FindByEmailAsync(request.Email);

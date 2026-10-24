@@ -8,6 +8,8 @@ public class ProjectEntity
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    // Identity lives in a separate database, so this is deliberately not an EF foreign key.
+    public string OwnerId { get; set; } = string.Empty;
 
     // Navigation property: one Project has many Sprints.
     // EF Core uses this to build the foreign key relationship.

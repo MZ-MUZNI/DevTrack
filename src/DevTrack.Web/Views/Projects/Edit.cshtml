@@ -1,4 +1,4 @@
-@model DevTrack.Core.Entities.ProjectEntity
+@model DevTrack.Web.Models.ProjectFormViewModel
 
 @{
     ViewData["Title"] = "Edit Project";
@@ -9,7 +9,6 @@
 <form asp-action="Edit" method="post">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="CreatedAt" />
 
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 

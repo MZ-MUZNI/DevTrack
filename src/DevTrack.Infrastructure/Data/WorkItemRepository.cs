@@ -21,6 +21,7 @@ namespace DevTrack.Infrastructure.Data
         {
             return await _context.WorkItems
                 .Include(w => w.Sprint)
+                .ThenInclude(s => s!.Project)
                 .ToListAsync();
         }
 
@@ -28,6 +29,7 @@ namespace DevTrack.Infrastructure.Data
         {
             return await _context.WorkItems
                 .Include(w => w.Sprint)
+                .ThenInclude(s => s!.Project)
                 .FirstOrDefaultAsync(w => w.Id == id);
         }
     }

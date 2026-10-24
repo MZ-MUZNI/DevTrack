@@ -35,6 +35,14 @@ public class DevTrackDbContext : Microsoft.EntityFrameworkCore.DbContext
             .HasMaxLength(200)
             .IsRequired();
 
+        modelBuilder.Entity<ProjectEntity>()
+            .Property(p => p.OwnerId)
+            .HasMaxLength(450)
+            .IsRequired();
+
+        modelBuilder.Entity<ProjectEntity>()
+            .HasIndex(p => p.OwnerId);
+
         modelBuilder.Entity<WorkItem>()
             .Property(w => w.Title)
             .HasMaxLength(300)
