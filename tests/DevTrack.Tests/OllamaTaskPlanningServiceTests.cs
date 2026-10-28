@@ -28,7 +28,8 @@ public sealed class OllamaTaskPlanningServiceTests
             Options.Create(new OllamaOptions { Model = "test-model" }));
 
         var result = await service.SuggestSubtasksAsync(
-            new TaskPlanningRequest("Password reset", "Let users reset passwords.", DateTime.Today, DateTime.Today.AddDays(14)));
+            new TaskPlanningRequest("Password reset", "Let users reset passwords.", DateTime.Today, DateTime.Today.AddDays(14)),
+            TestContext.Current.CancellationToken);
 
         Assert.Equal("Add password reset", result.Summary);
         Assert.Single(result.Assumptions);

@@ -6,6 +6,7 @@ using DevTrack.Infrastructure.Data;
 using DevTrack.Infrastructure.Identity;
 using DevTrack.Infrastructure.AI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;

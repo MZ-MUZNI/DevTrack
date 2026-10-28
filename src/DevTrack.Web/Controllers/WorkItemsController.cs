@@ -101,8 +101,8 @@ namespace DevTrack.Web.Controllers
             {
                 try
                 {
-                    var workItem = ToEntity(model);
-                    await _workItemService.UpdateAsync(workItem);
+                    Apply(model, existingWorkItem);
+                    await _workItemService.UpdateAsync(existingWorkItem);
                     return RedirectToAction(nameof(Index));
                 }
                 catch (InvalidOperationException ex)
@@ -138,10 +138,20 @@ namespace DevTrack.Web.Controllers
 
         private static WorkItem ToEntity(WorkItemFormViewModel model) => new()
         {
-            Id = model.Id, Title = model.Title.Trim(), Description = model.Description?.Trim(),
+            Title = model.Title.Trim(), Description = model.Description?.Trim(),
             Status = model.Status, AssignedTo = model.AssignedTo?.Trim(),
             EstimatedHours = model.EstimatedHours, SprintId = model.SprintId
         };
+
+        private static void Apply(WorkItemFormViewModel model, WorkItem workItem)
+        {
+            workItem.Title = model.Title.Trim();
+            workItem.Description = model.Description?.Trim();
+            workItem.Status = model.Status;
+            workItem.AssignedTo = model.AssignedTo?.Trim();
+            workItem.EstimatedHours = model.EstimatedHours;
+            workItem.SprintId = model.SprintId;
+        }
 
         private static WorkItemFormViewModel ToFormModel(WorkItem workItem) => new()
         {
